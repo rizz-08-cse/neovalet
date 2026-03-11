@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard – NeoVault</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--pink:#ff00cc;--purple:#a200ff;--dark:#07000f;}
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:linear-gradient(135deg,#000000,#140026,#330066);
+  color:white;min-height:100vh;
+}
+/* NAVBAR */
+.navbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:20px 40px;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(162,0,255,0.2);
+  box-shadow:0 0 30px rgba(138,43,226,0.15);
+  position:sticky;top:0;z-index:100;
+}
+.nav-logo{font-family:'Orbitron',monospace;font-size:22px;letter-spacing:4px;
+  background:linear-gradient(45deg,#ff00cc,#a200ff);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;}
+.nav-user{display:flex;align-items:center;gap:15px;}
+.user-info{text-align:right;}
+.user-name{font-size:14px;letter-spacing:1px;color:#cc99ff;}
+.user-email{font-size:11px;color:#664488;letter-spacing:1px;}
+.nav-btns{display:flex;gap:10px;}
+.nav-btn{
+  padding:8px 18px;border-radius:20px;border:1px solid rgba(255,0,204,0.3);
+  background:transparent;color:#ff00cc;cursor:pointer;font-family:'Rajdhani',sans-serif;
+  font-size:13px;letter-spacing:1px;transition:0.3s;
+}
+.nav-btn:hover{background:rgba(255,0,204,0.1);box-shadow:0 0 15px rgba(255,0,204,0.2);}
+.nav-btn.primary{background:linear-gradient(45deg,#ff00cc22,#a200ff22);border-color:rgba(162,0,255,0.5);}
+/* STATS BAR */
+.stats-bar{
+  display:flex;gap:20px;padding:25px 40px;
+  background:rgba(0,0,0,0.3);
+  border-bottom:1px solid rgba(162,0,255,0.1);
+}
+.stat{
+  background:rgba(10,0,25,0.6);border:1px solid rgba(162,0,255,0.2);
+  border-radius:14px;padding:15px 22px;flex:1;text-align:center;transition:0.3s;
+}
+.stat:hover{border-color:rgba(255,0,204,0.4);box-shadow:0 0 20px rgba(162,0,255,0.1);}
+.stat-num{font-family:'Orbitron',monospace;font-size:28px;font-weight:700;
+  background:linear-gradient(45deg,#ff00cc,#a200ff);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;}
+.stat-label{font-size:11px;letter-spacing:2px;color:#664488;text-transform:uppercase;margin-top:4px;}
+/* MAIN */
+.main{padding:40px;}
+.section-title{
+  font-family:'Orbitron',monospace;font-size:14px;letter-spacing:3px;
+  color:#9966cc;text-transform:uppercase;margin-bottom:25px;
+  display:flex;align-items:center;gap:12px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(162,0,255,0.3),transparent);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;}
+.card{
+  border-radius:20px;background:rgba(12,0,28,0.8);
+  border:1px solid rgba(162,0,255,0.2);overflow:hidden;cursor:pointer;
+  transition:0.4s;position:relative;
+}
+.card:hover{transform:translateY(-5px);box-shadow:0 10px 40px rgba(255,0,204,0.2);border-color:rgba(255,0,204,0.4);}
+.card-img{height:140px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a0033,#330066);}
+.card-emoji{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:50px;z-index:1;}
+.card-body{padding:18px;}
+.card-name{font-family:'Orbitron',monospace;font-size:14px;letter-spacing:2px;color:white;margin-bottom:8px;}
+.card-status{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.status-dot{width:8px;height:8px;border-radius:50%;}
+.status-dot.valid{background:#00ff88;box-shadow:0 0 8px #00ff88;}
+.status-dot.expiring{background:#ffaa00;box-shadow:0 0 8px #ffaa00;}
+.status-dot.expired{background:#ff4466;box-shadow:0 0 8px #ff4466;}
+.status-dot.none{background:#444;}
+.status-text{font-size:12px;letter-spacing:1px;}
+.status-text.valid{color:#00ff88;}
+.status-text.expiring{color:#ffaa00;}
+.status-text.expired{color:#ff4466;}
+.status-text.none{color:#555;}
+.card-dates{font-size:11px;color:#664488;letter-spacing:1px;}
+.card-actions{display:flex;gap:8px;margin-top:12px;}
+.action-btn{
+  flex:1;padding:8px;border-radius:10px;border:1px solid rgba(162,0,255,0.3);
+  background:transparent;color:#cc99ff;font-size:11px;letter-spacing:1px;
+  cursor:pointer;transition:0.3s;font-family:'Rajdhani',sans-serif;
+}
+.action-btn:hover{background:rgba(162,0,255,0.1);border-color:rgba(255,0,204,0.4);}
+.action-btn.primary{background:linear-gradient(45deg,#ff00cc15,#a200ff15);border-color:rgba(255,0,204,0.3);color:#ff00cc;}
+/* LOADING OVERLAY */
+.loading-overlay{
+  position:fixed;inset:0;background:rgba(7,0,15,0.9);z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+.loading-overlay.hide{display:none;}
+.loader{width:50px;height:50px;border:3px solid rgba(162,0,255,0.2);border-top-color:#ff00cc;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-family:'Orbitron',monospace;font-size:13px;letter-spacing:3px;color:#9966cc;}
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);
+  backdrop-filter:blur(10px);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:rgba(10,0,25,0.95);border:1px solid rgba(162,0,255,0.3);
+  border-radius:24px;width:100%;max-width:500px;
+  box-shadow:0 0 80px rgba(162,0,255,0.2);overflow:hidden;
+}
+.modal-header{
+  padding:25px 30px;
+  background:linear-gradient(135deg,rgba(255,0,204,0.1),rgba(162,0,255,0.1));
+  border-bottom:1px solid rgba(162,0,255,0.2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-title{font-family:'Orbitron',monospace;font-size:16px;letter-spacing:2px;color:#ff00cc;}
+.modal-close{background:none;border:none;color:#664488;font-size:22px;cursor:pointer;transition:0.2s;}
+.modal-close:hover{color:#ff00cc;}
+.modal-body{padding:30px;}
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;font-size:11px;letter-spacing:2px;color:#9966cc;margin-bottom:8px;text-transform:uppercase;}
+.form-group input,.form-group select{
+  width:100%;padding:12px 16px;border-radius:10px;
+  border:1px solid rgba(162,0,255,0.3);
+  background:rgba(10,0,25,0.8);color:white;outline:none;
+  font-family:'Rajdhani',sans-serif;font-size:14px;transition:0.3s;
+}
+.form-group input:focus,.form-group select:focus{border-color:#ff00cc;box-shadow:0 0 12px rgba(255,0,204,0.2);}
+.form-group select option{background:#1a0033;color:white;}
+.modal-footer{padding:20px 30px;display:flex;gap:12px;border-top:1px solid rgba(162,0,255,0.15);}
+.modal-btn{
+  flex:1;padding:13px;border-radius:12px;border:none;cursor:pointer;
+  font-family:'Orbitron',monospace;font-size:12px;letter-spacing:2px;transition:0.3s;
+}
+.modal-btn.save{background:linear-gradient(45deg,#ff00cc,#a200ff);color:white;}
+.modal-btn.save:hover{box-shadow:0 0 30px rgba(255,0,204,0.4);}
+.modal-btn.save:disabled{opacity:0.6;cursor:not-allowed;}
+.modal-btn.cancel{background:rgba(162,0,255,0.1);border:1px solid rgba(162,0,255,0.3);color:#9966cc;}
+.modal-btn.cancel:hover{background:rgba(162,0,255,0.2);}
+/* TOAST */
+.toast{
+  position:fixed;bottom:30px;right:30px;z-index:300;
+  background:rgba(10,0,25,0.95);border:1px solid rgba(162,0,255,0.4);
+  border-radius:14px;padding:16px 22px;min-width:280px;
+  box-shadow:0 0 40px rgba(162,0,255,0.2);
+  transform:translateY(100px);opacity:0;transition:0.5s;font-size:14px;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-title{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:2px;color:#ff00cc;margin-bottom:5px;}
+/* LOGOUT */
+.logout-confirm{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:400;display:none;align-items:center;justify-content:center;}
+.logout-confirm.open{display:flex;}
+.lc-box{
+  background:rgba(10,0,25,0.95);border:1px solid rgba(255,0,204,0.3);
+  border-radius:20px;padding:40px;text-align:center;max-width:360px;
+  box-shadow:0 0 60px rgba(255,0,204,0.15);
+}
+.lc-box h3{font-family:'Orbitron',monospace;font-size:16px;letter-spacing:2px;color:#ff00cc;margin-bottom:12px;}
+.lc-box p{color:#9966cc;font-size:14px;margin-bottom:25px;}
+.lc-btns{display:flex;gap:12px;}
+.lc-btn{flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:1px;transition:0.3s;}
+.lc-btn.yes{background:linear-gradient(45deg,#ff00cc,#a200ff);color:white;}
+.lc-btn.no{background:rgba(162,0,255,0.1);border:1px solid rgba(162,0,255,0.3);color:#9966cc;}
+/* NOTIFY */
+.modal-overlay#notifyModal .modal{max-width:480px;}
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loader"></div>
+  <div class="loading-text">LOADING VAULT…</div>
+</div>
+
+<div class="navbar">
+  <div class="nav-logo">⬡ NEOVAULT</div>
+  <div class="nav-user">
+    <div class="user-info">
+      <div class="user-name" id="navName">–</div>
+      <div class="user-email" id="navEmail">–</div>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn primary" onclick="openNotifyAll()">🔔 Notify All Expiring</button>
+      <button class="nav-btn" onclick="showLogoutConfirm()">Exit</button>
+    </div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num" id="statTotal">–</div><div class="stat-label">Total Docs</div></div>
+  <div class="stat"><div class="stat-num" id="statValid" style="color:#00ff88">–</div><div class="stat-label">Valid</div></div>
+  <div class="stat"><div class="stat-num" id="statExpiring" style="color:#ffaa00">–</div><div class="stat-label">Expiring Soon</div></div>
+  <div class="stat"><div class="stat-num" id="statExpired" style="color:#ff4466">–</div><div class="stat-label">Expired</div></div>
+</div>
+
+<div class="main">
+  <div class="section-title">Document Vault</div>
+  <div class="grid" id="docGrid"></div>
+</div>
+
+<!-- Edit/Add Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">UPDATE DOCUMENT</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Issue Date</label><input type="date" id="fIssue"></div>
+      <div class="form-group"><label>Expiry Date</label><input type="date" id="fExpiry"></div>
+      <div class="form-group"><label>Document Number / ID</label><input type="text" id="fDocNum" placeholder="e.g. A1234567"></div>
+      <div class="form-group"><label>Send Reminder</label>
+        <select id="fReminder">
+          <option value="30">30 days before</option>
+          <option value="60">60 days before</option>
+          <option value="90">90 days before</option>
+          <option value="0">On expiry day</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" onclick="closeModal()">CANCEL</button>
+      <button class="modal-btn save" id="saveBtn" onclick="saveDoc()">SAVE DOCUMENT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notify Modal -->
+<div class="modal-overlay" id="notifyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="notifyTitle">SEND RENEWAL NOTIFICATION</div>
+      <button class="modal-close" onclick="closeNotify()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="notifyDocInfo" style="margin-bottom:20px;padding:14px;background:rgba(162,0,255,0.08);border-radius:12px;border:1px solid rgba(162,0,255,0.2);font-size:13px;color:#cc99ff;letter-spacing:1px;"></div>
+      <div class="form-group"><label>Send via</label>
+        <select id="notifyMethod">
+          <option value="email">📧 Email</option>
+          <option value="phone">📱 SMS / Phone</option>
+          <option value="both">📧📱 Both</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Email Address</label><input type="email" id="notifyEmail"></div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="notifyPhone"></div>
+      <div class="form-group"><label>Custom Message (optional)</label><input type="text" id="notifyMsg" placeholder="Reminder: Your document is expiring soon!"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" onclick="closeNotify()">CANCEL</button>
+      <button class="modal-btn save" onclick="sendNotification()">🔔 SEND NOTIFICATION</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toastTitle"></div>
+  <div id="toastMsg"></div>
+</div>
+
+<!-- Logout Confirm -->
+<div class="logout-confirm" id="logoutConfirm">
+  <div class="lc-box">
+    <h3>EXIT VAULT</h3>
+    <p>Are you sure you want to lock the vault and sign out?</p>
+    <div class="lc-btns">
+      <button class="lc-btn no" onclick="hideLogoutConfirm()">STAY</button>
+      <button class="lc-btn yes" onclick="doLogout()">LOCK VAULT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔧 PASTE YOUR SUPABASE CREDENTIALS HERE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const SUPABASE_URL     = 'https://yetbkoocboglkudxumnf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlldGJrb29jYm9nbGt1ZHh1bW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzIxNjAsImV4cCI6MjA4Nzk0ODE2MH0.jOi7K_R4XPtPCuRfdPFaAN1yk7PGEUVbQhMyzD6t2gw';
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const DOCS = [
+  {id:'passport',    name:'Passport',            emoji:'🛂'},
+  {id:'license',     name:'Driving License',      emoji:'🚗'},
+  {id:'aadhaar',     name:'Aadhaar Card',          emoji:'🪪'},
+  {id:'pan',         name:'PAN Card',              emoji:'📋'},
+  {id:'vehicle_ins', name:'Vehicle Insurance',     emoji:'🛡️'},
+  {id:'health_ins',  name:'Health Insurance',      emoji:'🏥'},
+  {id:'college_id',  name:'College ID',            emoji:'🎓'},
+  {id:'employee_id', name:'Employee ID',           emoji:'💼'},
+  {id:'vehicle_rc',  name:'Vehicle RC',            emoji:'📝'},
+  {id:'pollution',   name:'Pollution Certificate', emoji:'🌿'},
+  {id:'rental',      name:'Rental Agreement',      emoji:'🏠'},
+  {id:'bank',        name:'Bank Passbook',         emoji:'🏦'},
+];
+
+let currentUser = null;   // Supabase user id (uuid)
+let currentEmail = null;
+let currentDocId = null;
+let notifyDocIds = [];
+let docsCache = {};       // local cache: {doc_type: {issue, expiry, doc_number, reminder}}
+
+// ── Helpers ──────────────────────────────────────────
+function getStatus(expiry){
+  if(!expiry) return 'none';
+  const now=new Date(); now.setHours(0,0,0,0);
+  const exp=new Date(expiry);
+  const diff=(exp-now)/(1000*60*60*24);
+  if(diff<0) return 'expired';
+  if(diff<=90) return 'expiring';
+  return 'valid';
+}
+function getDaysLeft(expiry){
+  if(!expiry) return null;
+  const now=new Date(); now.setHours(0,0,0,0);
+  const exp=new Date(expiry);
+  return Math.ceil((exp-now)/(1000*60*60*24));
+}
+function fmtDate(d){
+  if(!d) return '–';
+  return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function showToast(title,msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastTitle').textContent=title;
+  document.getElementById('toastMsg').innerHTML=msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),4000);
+}
+
+// ── Supabase data layer ───────────────────────────────
+async function fetchDocs(){
+  const {data,error} = await sb
+    .from('documents')
+    .select('*')
+    .eq('user_id', currentUser);
+  if(error){showToast('⚠ Error', error.message); return;}
+  docsCache={};
+  (data||[]).forEach(row=>{
+    docsCache[row.doc_type]={
+      issue:    row.issue_date,
+      expiry:   row.expiry_date,
+      docNum:   row.doc_number,
+      reminder: row.reminder_days
+    };
+  });
+}
+
+async function upsertDoc(docType, fields){
+  const {error} = await sb
+    .from('documents')
+    .upsert({
+      user_id:      currentUser,
+      doc_type:     docType,
+      issue_date:   fields.issue   || null,
+      expiry_date:  fields.expiry  || null,
+      doc_number:   fields.docNum  || null,
+      reminder_days:parseInt(fields.reminder)||30,
+      updated_at:   new Date().toISOString()
+    },{onConflict:'user_id,doc_type'});
+  if(error){showToast('⚠ Save Error', error.message); return false;}
+  docsCache[docType]=fields;
+  return true;
+}
+
+async function logNotification(docIds, method, email, phone, customMsg){
+  const rows = docIds.map(id=>{
+    const def=DOCS.find(d=>d.id===id);
+    const d=docsCache[id]||{};
+    return {
+      user_id:   currentUser,
+      doc_type:  id,
+      doc_name:  def.name,
+      method,
+      sent_email: email||null,
+      sent_phone: phone||null,
+      message:   customMsg||'Renewal reminder for '+def.name,
+      expiry_date: d.expiry||null,
+      days_left:  getDaysLeft(d.expiry)
+    };
+  });
+  await sb.from('notification_logs').insert(rows);
+}
+
+// ── Render ────────────────────────────────────────────
+function renderGrid(){
+  const grid=document.getElementById('docGrid');
+  grid.innerHTML='';
+  let total=0,valid=0,expiring=0,expired=0;
+
+  DOCS.forEach(docDef=>{
+    const d=docsCache[docDef.id]||{};
+    const status=getStatus(d.expiry);
+    const daysLeft=getDaysLeft(d.expiry);
+    total++;
+    if(status==='valid') valid++;
+    else if(status==='expiring') expiring++;
+    else if(status==='expired') expired++;
+
+    let statusLabel='No Data';
+    if(status==='valid')    statusLabel=daysLeft===null?'Valid':'Valid · '+daysLeft+'d left';
+    if(status==='expiring') statusLabel=daysLeft+'d left – Renew Soon!';
+    if(status==='expired')  statusLabel='EXPIRED';
+
+    grid.innerHTML+=`
+    <div class="card">
+      <div class="card-img"><div class="card-emoji">${docDef.emoji}</div></div>
+      <div class="card-body">
+        <div class="card-name">${docDef.name}</div>
+        <div class="card-status">
+          <div class="status-dot ${status}"></div>
+          <span class="status-text ${status}">${statusLabel}</span>
+        </div>
+        <div class="card-dates">
+          ${d.docNum?'<span>🔹 '+d.docNum+'</span><br>':''}
+          ${d.issue?'Issued: '+fmtDate(d.issue)+'&nbsp;&nbsp;':''}
+          ${d.expiry?'Expires: '+fmtDate(d.expiry):''}
+          ${!d.issue&&!d.expiry?'Tap to add details':''}
+        </div>
+        <div class="card-actions">
+          <button class="action-btn primary" onclick="openEdit('${docDef.id}','${docDef.name}')">✏ Update</button>
+          <button class="action-btn" onclick="openNotify('${docDef.id}','${docDef.name}')">🔔 Notify</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('statTotal').textContent=total;
+  document.getElementById('statValid').textContent=valid;
+  document.getElementById('statExpiring').textContent=expiring;
+  document.getElementById('statExpired').textContent=expired;
+}
+
+// ── Edit Modal ────────────────────────────────────────
+function openEdit(id,name){
+  currentDocId=id;
+  const d=docsCache[id]||{};
+  document.getElementById('modalTitle').textContent='UPDATE · '+name.toUpperCase();
+  document.getElementById('fIssue').value=d.issue||'';
+  document.getElementById('fExpiry').value=d.expiry||'';
+  document.getElementById('fDocNum').value=d.docNum||'';
+  document.getElementById('fReminder').value=d.reminder||'30';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal(){document.getElementById('editModal').classList.remove('open');currentDocId=null;}
+
+async function saveDoc(){
+  if(!currentDocId) return;
+  const saveBtn=document.getElementById('saveBtn');
+  saveBtn.disabled=true; saveBtn.textContent='SAVING…';
+
+  const fields={
+    issue:    document.getElementById('fIssue').value,
+    expiry:   document.getElementById('fExpiry').value,
+    docNum:   document.getElementById('fDocNum').value,
+    reminder: document.getElementById('fReminder').value
+  };
+  const ok=await upsertDoc(currentDocId, fields);
+  saveBtn.disabled=false; saveBtn.textContent='SAVE DOCUMENT';
+
+  if(ok){
+    closeModal();
+    renderGrid();
+    showToast('✓ Document Saved','Saved to Supabase successfully');
+  }
+}
+
+// ── Notify Modal ──────────────────────────────────────
+async function openNotify(id,name){
+  notifyDocIds=[id];
+  const d=docsCache[id]||{};
+  const daysLeft=getDaysLeft(d.expiry);
+  document.getElementById('notifyTitle').textContent='NOTIFY · '+name.toUpperCase();
+  document.getElementById('notifyDocInfo').innerHTML=
+    `📄 <b style="color:#ff00cc">${name}</b><br>
+     Expires: ${fmtDate(d.expiry)} ${daysLeft!==null?'('+daysLeft+' days left)':'–'}<br>
+     Doc No: ${d.docNum||'–'}`;
+
+  // Pre-fill user's profile email/phone from Supabase
+  const {data} = await sb.from('user_profiles').select('email,phone').eq('id',currentUser).single();
+  document.getElementById('notifyEmail').value=data?.email||currentEmail||'';
+  document.getElementById('notifyPhone').value=data?.phone||'';
+  document.getElementById('notifyModal').classList.add('open');
+}
+
+async function openNotifyAll(){
+  const expiring=DOCS.filter(def=>{
+    const s=getStatus((docsCache[def.id]||{}).expiry);
+    return s==='expiring'||s==='expired';
+  });
+  if(!expiring.length){showToast('✓ All Clear','No documents expiring soon!');return;}
+  notifyDocIds=expiring.map(d=>d.id);
+  const {data} = await sb.from('user_profiles').select('email,phone').eq('id',currentUser).single();
+  document.getElementById('notifyTitle').textContent='NOTIFY ALL EXPIRING ('+expiring.length+')';
+  document.getElementById('notifyDocInfo').innerHTML=
+    expiring.map(def=>{
+      const d=docsCache[def.id]||{};
+      const dl=getDaysLeft(d.expiry);
+      return `📄 <b style="color:#ffaa00">${def.name}</b> – ${dl!==null?dl+' days left':'–'}`;
+    }).join('<br>');
+  document.getElementById('notifyEmail').value=data?.email||currentEmail||'';
+  document.getElementById('notifyPhone').value=data?.phone||'';
+  document.getElementById('notifyModal').classList.add('open');
+}
+function closeNotify(){document.getElementById('notifyModal').classList.remove('open');notifyDocIds=[];}
+
+async function sendNotification(){
+  const method    = document.getElementById('notifyMethod').value;
+  const email     = document.getElementById('notifyEmail').value.trim();
+  const phone     = document.getElementById('notifyPhone').value.trim();
+  const customMsg = document.getElementById('notifyMsg').value.trim();
+
+  if((method==='email'||method==='both')&&!email){showToast('⚠ Error','Please enter an email address');return;}
+  if((method==='phone'||method==='both')&&!phone){showToast('⚠ Error','Please enter a phone number');return;}
+
+  // Save notification log to Supabase
+  await logNotification(notifyDocIds, method, email, phone, customMsg);
+
+  let sent=[];
+  if(method==='email'||method==='both') sent.push('📧 '+email);
+  if(method==='phone'||method==='both') sent.push('📱 '+phone);
+
+  closeNotify();
+  const names=notifyDocIds.map(id=>DOCS.find(d=>d.id===id).name).join(', ');
+  showToast('🔔 Notification Sent!',`Sent for: ${names}<br><small style="color:#9966cc">${sent.join(' · ')}</small>`);
+
+  setTimeout(()=>{
+    const d=notifyDocIds.length===1?docsCache[notifyDocIds[0]]||{}:{};
+    const dl=notifyDocIds.length===1?getDaysLeft(d.expiry):null;
+    showEmailPreview(
+`━━━━━━━━━━━━━━━━━━━━━━━━
+✦ NEOVAULT RENEWAL ALERT ✦
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Document: ${names}
+${dl!==null?'Days Left: '+dl+' days':''}
+${d.expiry?'Expiry: '+fmtDate(d.expiry):''}
+
+${customMsg||'Please renew your document before it expires to avoid any inconvenience.'}
+
+Sent to: ${sent.join(', ')}
+━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ Powered by NeoVault`, sent);
+  },500);
+}
+
+function showEmailPreview(text,sent){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(10px);';
+  overlay.innerHTML=`
+    <div style="background:rgba(10,0,25,0.98);border:1px solid rgba(255,0,204,0.4);border-radius:20px;
+      max-width:480px;width:100%;box-shadow:0 0 80px rgba(255,0,204,0.2);overflow:hidden;">
+      <div style="padding:20px 25px;background:linear-gradient(135deg,rgba(255,0,204,0.1),rgba(162,0,255,0.1));
+        border-bottom:1px solid rgba(162,0,255,0.2);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;color:#ff00cc;">📨 NOTIFICATION PREVIEW</span>
+        <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:#ff00cc;font-size:20px;cursor:pointer;">✕</button>
+      </div>
+      <div style="padding:25px;font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:1px;line-height:1.8;color:#cc99ff;white-space:pre-line;">${text}</div>
+      <div style="padding:15px 25px;border-top:1px solid rgba(162,0,255,0.15);font-size:11px;color:#443355;letter-spacing:1px;">
+        ⚠ Simulation mode — In production, use Twilio / SendGrid via Supabase Edge Functions
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ── Logout ────────────────────────────────────────────
+function showLogoutConfirm(){document.getElementById('logoutConfirm').classList.add('open');}
+function hideLogoutConfirm(){document.getElementById('logoutConfirm').classList.remove('open');}
+async function doLogout(){
+  await sb.auth.signOut();
+  sessionStorage.clear();
+  window.location.href='login.html';
+}
+
+// ── Init ──────────────────────────────────────────────
+(async function init(){
+  // Verify session
+  const {data:sessionData} = await sb.auth.getSession();
+  const session = sessionData?.session;
+
+  if(!session){
+    // Fall back to sessionStorage check
+    const uid = sessionStorage.getItem('nv_user_id');
+    if(!uid){window.location.href='login.html';return;}
+    currentUser  = uid;
+    currentEmail = sessionStorage.getItem('nv_email')||'';
+  } else {
+    currentUser  = session.user.id;
+    currentEmail = session.user.email;
+    sessionStorage.setItem('nv_user_id', currentUser);
+    sessionStorage.setItem('nv_email',   currentEmail);
+  }
+
+  // Load profile name
+  const {data:profile} = await sb.from('user_profiles').select('name,email').eq('id',currentUser).single();
+  document.getElementById('navName').textContent  = profile?.name || currentEmail;
+  document.getElementById('navEmail').textContent = currentEmail;
+
+  // Fetch documents from Supabase
+  await fetchDocs();
+
+  // Hide loader, render
+  document.getElementById('loadingOverlay').classList.add('hide');
+  renderGrid();
+
+  // Alert on expiring docs
+  setTimeout(()=>{
+    const alertDocs=DOCS.filter(def=>{
+      const s=getStatus((docsCache[def.id]||{}).expiry);
+      return s==='expiring'||s==='expired';
+    });
+    if(alertDocs.length>0){
+      showToast('⚠ '+alertDocs.length+' Doc(s) Need Attention',
+        alertDocs.slice(0,3).map(d=>d.name).join(', ')+(alertDocs.length>3?' +more':''));
+    }
+  },1500);
+})();
+</script>
+</body>
+</html>

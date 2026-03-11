@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeoVault</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --pink:#ff00cc;
+  --purple:#a200ff;
+  --dark:#07000f;
+  --card-bg:rgba(20,0,40,0.85);
+}
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:var(--dark);
+  color:white;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  position:relative;
+}
+canvas#bg{position:absolute;inset:0;z-index:0;}
+.glow-orb{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(120px);
+  opacity:0.6;
+  animation:pulse 6s ease-in-out infinite alternate;
+}
+.glow-orb.top{width:500px;height:500px;background:radial-gradient(circle,#ff00cc,transparent);top:-200px;left:-150px;}
+.glow-orb.bot{width:500px;height:500px;background:radial-gradient(circle,#6600ff,transparent);bottom:-200px;right:-150px;animation-delay:3s;}
+@keyframes pulse{from{opacity:0.4;transform:scale(1);}to{opacity:0.7;transform:scale(1.15);}}
+.container{text-align:center;z-index:2;position:relative;}
+.logo-ring{
+  width:120px;height:120px;
+  border-radius:50%;
+  border:3px solid transparent;
+  background:linear-gradient(var(--dark),var(--dark)) padding-box,
+             linear-gradient(45deg,var(--pink),var(--purple)) border-box;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 30px;
+  box-shadow:0 0 40px #ff00cc55;
+  animation:spin-glow 4s linear infinite;
+}
+@keyframes spin-glow{
+  0%{box-shadow:0 0 30px #ff00cc55,0 0 60px #a200ff22;}
+  50%{box-shadow:0 0 60px #ff00ccaa,0 0 100px #a200ff55;}
+  100%{box-shadow:0 0 30px #ff00cc55,0 0 60px #a200ff22;}
+}
+.logo-ring svg{width:60px;height:60px;}
+h1{
+  font-family:'Orbitron',monospace;
+  font-size:72px;
+  font-weight:900;
+  background:linear-gradient(45deg,#ff00cc,#cc44ff,#a200ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:6px;
+  margin-bottom:12px;
+  text-shadow:none;
+  filter:drop-shadow(0 0 30px #ff00cc88);
+}
+.tagline{
+  color:#cc99ff;
+  font-size:17px;
+  letter-spacing:3px;
+  margin-bottom:50px;
+  font-weight:300;
+  text-transform:uppercase;
+}
+.btn-enter{
+  padding:16px 55px;
+  border:none;
+  border-radius:50px;
+  font-size:17px;
+  font-family:'Orbitron',monospace;
+  letter-spacing:3px;
+  background:linear-gradient(45deg,#ff00cc,#a200ff);
+  color:white;
+  cursor:pointer;
+  transition:0.4s;
+  box-shadow:0 0 30px #ff00cc77,0 4px 20px rgba(0,0,0,0.5);
+  position:relative;
+  overflow:hidden;
+}
+.btn-enter::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(45deg,transparent 30%,rgba(255,255,255,0.15) 50%,transparent 70%);
+  transform:translateX(-100%);
+  transition:0.5s;
+}
+.btn-enter:hover::before{transform:translateX(100%);}
+.btn-enter:hover{transform:scale(1.08);box-shadow:0 0 60px #ff00ccaa,0 8px 30px rgba(0,0,0,0.6);}
+.features{
+  display:flex;gap:30px;margin-top:50px;justify-content:center;
+}
+.feat{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  color:#9966cc;font-size:12px;letter-spacing:2px;text-transform:uppercase;
+}
+.feat-icon{
+  width:40px;height:40px;
+  background:rgba(162,0,255,0.15);
+  border:1px solid rgba(162,0,255,0.3);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+</style>
+</head>
+<body>
+<div class="glow-orb top"></div>
+<div class="glow-orb bot"></div>
+<div class="container">
+  <div class="logo-ring">
+    <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30 5L50 15V35L30 55L10 35V15L30 5Z" stroke="url(#g1)" stroke-width="2.5" fill="rgba(162,0,255,0.1)"/>
+      <path d="M30 15L42 21V33L30 45L18 33V21L30 15Z" fill="url(#g2)" opacity="0.7"/>
+      <circle cx="30" cy="30" r="5" fill="white" opacity="0.9"/>
+      <defs>
+        <linearGradient id="g1" x1="10" y1="5" x2="50" y2="55"><stop stop-color="#ff00cc"/><stop offset="1" stop-color="#a200ff"/></linearGradient>
+        <linearGradient id="g2" x1="18" y1="15" x2="42" y2="45"><stop stop-color="#ff00cc" stop-opacity="0.8"/><stop offset="1" stop-color="#a200ff" stop-opacity="0.8"/></linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <h1>NEOVAULT</h1>
+  <p class="tagline">Secure Document Renewal System</p>
+  <button class="btn-enter" onclick="window.location.href='login.html'">ENTER VAULT</button>
+  <div class="features">
+    <div class="feat"><div class="feat-icon">🔐</div>Encrypted</div>
+    <div class="feat"><div class="feat-icon">🔔</div>Alerts</div>
+    <div class="feat"><div class="feat-icon">📄</div>Documents</div>
+    <div class="feat"><div class="feat-icon">📱</div>Notify</div>
+  </div>
+</div>
+</body>
+</html>

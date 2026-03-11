@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login – NeoVault</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--pink:#ff00cc;--purple:#a200ff;--dark:#07000f;}
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:linear-gradient(135deg,#000000,#1a0033,#330066);
+  height:100vh;display:flex;justify-content:center;align-items:center;
+  overflow:hidden;position:relative;
+}
+.glow-orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:0.5;}
+.glow-orb.a{width:400px;height:400px;background:radial-gradient(circle,#ff00cc,transparent);top:-150px;left:-100px;}
+.glow-orb.b{width:400px;height:400px;background:radial-gradient(circle,#6600ff,transparent);bottom:-150px;right:-100px;}
+.box{
+  width:420px;padding:50px 45px;
+  border-radius:24px;
+  background:rgba(8,0,20,0.85);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(162,0,255,0.25);
+  box-shadow:0 0 60px rgba(162,0,255,0.2),0 0 120px rgba(255,0,204,0.1);
+  z-index:2;position:relative;
+}
+.logo{
+  text-align:center;margin-bottom:30px;
+  font-family:'Orbitron',monospace;font-size:26px;font-weight:700;
+  background:linear-gradient(45deg,#ff00cc,#a200ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;letter-spacing:4px;
+}
+.tabs{display:flex;gap:0;margin-bottom:32px;border-radius:12px;overflow:hidden;border:1px solid rgba(162,0,255,0.3);}
+.tab{
+  flex:1;padding:12px;text-align:center;cursor:pointer;
+  font-family:'Orbitron',monospace;font-size:12px;letter-spacing:2px;
+  color:#9966cc;background:transparent;transition:0.3s;border:none;
+}
+.tab.active{background:linear-gradient(45deg,#ff00cc22,#a200ff22);color:#ff00cc;}
+.field{position:relative;margin-bottom:18px;}
+.field label{display:block;font-size:12px;letter-spacing:2px;color:#9966cc;margin-bottom:8px;text-transform:uppercase;}
+.field input{
+  width:100%;padding:14px 18px;
+  border-radius:12px;border:1px solid rgba(162,0,255,0.3);
+  background:rgba(10,0,25,0.8);color:white;outline:none;
+  font-family:'Rajdhani',sans-serif;font-size:15px;transition:0.3s;
+}
+.field input:focus{border-color:#ff00cc;box-shadow:0 0 15px rgba(255,0,204,0.2);}
+.field input::placeholder{color:#553366;}
+.btn{
+  width:100%;padding:15px;margin-top:10px;
+  border:none;border-radius:14px;
+  background:linear-gradient(45deg,#ff00cc,#a200ff);
+  color:white;font-size:15px;font-family:'Orbitron',monospace;
+  letter-spacing:2px;cursor:pointer;transition:0.4s;
+  box-shadow:0 0 25px rgba(255,0,204,0.3);
+}
+.btn:hover{box-shadow:0 0 50px rgba(255,0,204,0.6);transform:scale(1.03);}
+.btn:disabled{opacity:0.6;transform:none;cursor:not-allowed;}
+.spinner{
+  display:inline-block;width:14px;height:14px;
+  border:2px solid rgba(255,255,255,0.3);border-top-color:white;
+  border-radius:50%;animation:spin 0.8s linear infinite;
+  vertical-align:middle;margin-right:8px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.msg{
+  margin-top:15px;padding:12px;border-radius:10px;
+  font-size:13px;text-align:center;letter-spacing:1px;display:none;
+}
+.msg.success{background:rgba(0,255,100,0.1);border:1px solid rgba(0,255,100,0.3);color:#00ff66;}
+.msg.error{background:rgba(255,0,100,0.1);border:1px solid rgba(255,0,100,0.3);color:#ff4466;}
+.hint{font-size:12px;color:#664488;text-align:center;margin-top:18px;letter-spacing:1px;}
+.db-badge{
+  position:absolute;top:14px;right:18px;
+  font-size:10px;letter-spacing:1px;color:#443366;
+  border:1px solid rgba(162,0,255,0.2);border-radius:6px;padding:3px 9px;
+}
+</style>
+</head>
+<body>
+<div class="glow-orb a"></div>
+<div class="glow-orb b"></div>
+<div class="box">
+  <div class="db-badge">⚡ Supabase</div>
+  <div class="logo">⬡ NEOVAULT</div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">SIGN IN</button>
+    <button class="tab" onclick="switchTab('register')">REGISTER</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginForm">
+    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@email.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+    <button class="btn" id="loginBtn" onclick="doLogin()">ENTER VAULT</button>
+  </div>
+
+  <!-- REGISTER -->
+  <div id="registerForm" style="display:none;">
+    <div class="field"><label>Full Name</label><input type="text" id="regName" placeholder="Your Name"></div>
+    <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="you@email.com"></div>
+    <div class="field"><label>Phone Number</label><input type="tel" id="regPhone" placeholder="+91 9876543210"></div>
+    <div class="field"><label>Password</label><input type="password" id="regPass" placeholder="Min 6 characters"></div>
+    <button class="btn" id="registerBtn" onclick="doRegister()">CREATE VAULT</button>
+  </div>
+
+  <div class="msg" id="msg"></div>
+  <p class="hint">🔐 Secured by Supabase</p>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔧 PASTE YOUR SUPABASE CREDENTIALS HERE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const SUPABASE_URL     = 'https://yetbkoocboglkudxumnf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlldGJrb29jYm9nbGt1ZHh1bW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzIxNjAsImV4cCI6MjA4Nzk0ODE2MH0.jOi7K_R4XPtPCuRfdPFaAN1yk7PGEUVbQhMyzD6t2gw';
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active',(tab==='login'&&i===0)||(tab==='register'&&i===1));
+  });
+  document.getElementById('loginForm').style.display    = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+  hideMsg();
+}
+
+function showMsg(text,type){
+  const m=document.getElementById('msg');
+  m.textContent=text; m.className='msg '+type; m.style.display='block';
+}
+function hideMsg(){document.getElementById('msg').style.display='none';}
+
+function setLoading(btnId,loading,label){
+  const btn=document.getElementById(btnId);
+  btn.disabled=loading;
+  btn.innerHTML=loading?'<span class="spinner"></span>CONNECTING…':label;
+}
+
+async function doRegister(){
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const pass  = document.getElementById('regPass').value;
+
+  if(!name||!email||!phone||!pass){showMsg('⚠ All fields required','error');return;}
+  if(pass.length<6){showMsg('⚠ Password min 6 chars','error');return;}
+
+  setLoading('registerBtn',true,'CREATE VAULT');
+
+  // 1. Create auth user in Supabase Auth
+  const {data,error} = await sb.auth.signUp({email,password:pass});
+  if(error){showMsg('⚠ '+error.message,'error');setLoading('registerBtn',false,'CREATE VAULT');return;}
+
+  // 2. Insert profile row (name, phone) into user_profiles table
+  const {error:profErr} = await sb.from('user_profiles')
+    .insert({id:data.user.id, name, email, phone});
+  if(profErr){showMsg('⚠ '+profErr.message,'error');setLoading('registerBtn',false,'CREATE VAULT');return;}
+
+  // Auto login after register
+  const {data:sd, error:se} = await sb.auth.signInWithPassword({email, password:pass});
+  setLoading('registerBtn',false,'CREATE VAULT');
+  if(se){
+    showMsg('✓ Vault created! Please sign in now.','success');
+    setTimeout(()=>switchTab('login'),1500);
+  } else {
+    showMsg('✓ Vault created! Entering…','success');
+    setTimeout(()=>window.location.href='dashboard.html',1000);
+  }
+}
+
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if(!email||!pass){showMsg('⚠ Enter credentials','error');return;}
+
+  setLoading('loginBtn',true,'ENTER VAULT');
+
+  const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){showMsg('⚠ '+error.message,'error');setLoading('loginBtn',false,'ENTER VAULT');return;}
+
+  // Store minimal session info for dashboard
+  sessionStorage.setItem('nv_user_id', data.user.id);
+  sessionStorage.setItem('nv_email',   data.user.email);
+
+  showMsg('✓ Access granted…','success');
+  setTimeout(()=>window.location.href='dashboard.html',1000);
+}
+
+// Auto-redirect if already logged in
+(async()=>{
+  const {data} = await sb.auth.getSession();
+  if(data.session){
+    sessionStorage.setItem('nv_user_id', data.session.user.id);
+    sessionStorage.setItem('nv_email',   data.session.user.email);
+    window.location.href='dashboard.html';
+  }
+})();
+</script>
+</body>
+</html>
